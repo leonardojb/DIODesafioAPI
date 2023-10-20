@@ -12,22 +12,45 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private final Logger logger  = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleBusinessException(IllegalArgumentException businessException) {
-        return new ResponseEntity<>(businessException.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY);
+    public ResponseEntity<ErrorResponse> handleBusinessException(IllegalArgumentException businessException) {
+        ErrorResponse errorResponse = new ErrorResponse("Erro de Validação", businessException.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<String> handleNotFoundException(NoSuchElementException notFoundException) {
-        return new ResponseEntity<>("Resource ID not found.", HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NoSuchElementException notFoundException) {
+        ErrorResponse errorResponse = new ErrorResponse("Recurso Não Encontrado", "O ID do recurso não foi encontrado.");
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Throwable.class)
-    public ResponseEntity<String> handleUnexpectedException(Throwable unexpectedException) {
-        var message = "Unexpected server error, see the logs.";
+    public ResponseEntity<ErrorResponse> handleUnexpectedException(Throwable unexpectedException) {
+        var message = "Erro inesperado no servidor, consulte os registros.";
         logger.error(message, unexpectedException);
-        return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        ErrorResponse errorResponse = new ErrorResponse("Erro Interno do Servidor", message);
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // Classe personalizada para resposta de erro
+    public static class ErrorResponse {
+        private final String error;
+        private final String message;
+
+        public ErrorResponse(String error, String message) {
+            this.error = error;
+            this.message = message;
+        }
+
+        // Getters para erro e mensagem
+        public String getError() {
+            return error;
+        }
+
+        public String getMessage() {
+            return message;
+        }
     }
 }
